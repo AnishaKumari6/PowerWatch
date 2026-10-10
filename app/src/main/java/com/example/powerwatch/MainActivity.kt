@@ -13,7 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.example.powerwatch.screens.NextScreen
+import com.example.powerwatch.screens.DashboardScreen
 import com.example.powerwatch.screens.WelcomeScreen
 import com.example.powerwatch.ui.theme.PowerWatchTheme
 
@@ -21,13 +21,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         enableEdgeToEdge()
 
         setContent {
             PowerWatchTheme {
-
-                var showNextScreen by remember {
+                var showDashboard by remember {
                     mutableStateOf(false)
                 }
 
@@ -35,18 +33,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
 
-                    if (showNextScreen) {
-                        NextScreen(
-                            modifier = Modifier.padding(innerPadding),
-                            onBack = {
-                                showNextScreen = false
-                            }
+                    if (showDashboard) {
+                        DashboardScreen(
+                            modifier = Modifier.padding(innerPadding)
                         )
                     } else {
                         WelcomeScreen(
                             modifier = Modifier.padding(innerPadding),
                             onGetStarted = {
-                                showNextScreen = true
+                                showDashboard = true
                             }
                         )
                     }
