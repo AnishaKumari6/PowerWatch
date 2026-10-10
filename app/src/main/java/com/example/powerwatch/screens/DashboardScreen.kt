@@ -2,31 +2,21 @@
 package com.example.powerwatch.screens
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bolt
@@ -37,56 +27,41 @@ import androidx.compose.material.icons.filled.ListAlt
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val PWGreen = Color(0xFF087F5B)
-private val PWDeepGreen = Color(0xFF065F46)
-private val PWBackground = Color(0xFFF7FAF8)
-private val PWLightGreen = Color(0xFFE6F5EC)
-private val PWText = Color(0xFF19352B)
-private val PWMuted = Color(0xFF718078)
-private val PWOrange = Color(0xFFB96B20)
+private val Green = Color(0xFF087F5B)
+private val DeepGreen = Color(0xFF064B39)
+private val Mint = Color(0xFF78F0B3)
+private val Background = Color(0xFFF5F8F5)
+private val Ink = Color(0xFF172E25)
+private val Muted = Color(0xFF75837B)
+private val Orange = Color(0xFFB96B20)
 
 @Composable
-fun DashboardScreen(
-    modifier: Modifier = Modifier
-) {
+fun DashboardScreen(modifier: Modifier = Modifier) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showReportForm by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = PWBackground,
+        containerColor = Background,
         bottomBar = {
             if (!showReportForm) {
                 NavigationBar(
-                    containerColor = Color.White
+                    containerColor = Color.White,
+                    tonalElevation = 8.dp
                 ) {
                     NavigationBarItem(
                         selected = selectedTab == 0,
@@ -96,7 +71,6 @@ fun DashboardScreen(
                         },
                         label = { Text("Home") }
                     )
-
                     NavigationBarItem(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
@@ -105,7 +79,6 @@ fun DashboardScreen(
                         },
                         label = { Text("Reports") }
                     )
-
                     NavigationBarItem(
                         selected = selectedTab == 2,
                         onClick = { selectedTab = 2 },
@@ -117,233 +90,232 @@ fun DashboardScreen(
                 }
             }
         }
-    ) { innerPadding ->
+    ) { padding ->
         when {
-            showReportForm -> {
-                ReportPlaceholderScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    onBack = { showReportForm = false }
-                )
-            }
+            showReportForm -> ReportFormScreen(
+                modifier = Modifier.padding(padding),
+                onBack = {
+                    showReportForm = false
+                },
+                onSubmitted = {
+                    showReportForm = false
+                    selectedTab = 1
+                }
+            )
 
-            selectedTab == 0 -> {
-                HomeDashboardContent(
-                    modifier = Modifier.padding(innerPadding),
-                    onReportWaste = { showReportForm = true },
-                    onViewReports = { selectedTab = 1 }
-                )
-            }
+            selectedTab == 0 -> HomeContent(
+                modifier = Modifier.padding(padding),
+                onReport = { showReportForm = true },
+                onViewReports = { selectedTab = 1 }
+            )
 
-            selectedTab == 1 -> {
-                ReportsPlaceholderScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    onReportWaste = { showReportForm = true }
-                )
-            }
+            selectedTab == 1 -> ReportsContent(
+                modifier = Modifier.padding(padding),
+                onReport = { showReportForm = true }
+            )
 
-            else -> {
-                ProfilePlaceholderScreen(
-                    modifier = Modifier.padding(innerPadding)
-                )
-            }
+            else -> ProfileContent(
+                modifier = Modifier.padding(padding)
+            )
         }
     }
 }
 
 @Composable
-private fun HomeDashboardContent(
+private fun HomeContent(
     modifier: Modifier = Modifier,
-    onReportWaste: () -> Unit,
+    onReport: () -> Unit,
     onViewReports: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
-    var hasEntered by remember { mutableStateOf(false) }
+    var entered by remember { mutableStateOf(false) }
 
-    androidx.compose.runtime.LaunchedEffect(Unit) {
-        hasEntered = true
+    LaunchedEffect(Unit) {
+        entered = true
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(scrollState)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp)
-            .padding(top = 20.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(22.dp)
+            .padding(top = 22.dp, bottom = 26.dp),
+        verticalArrangement = Arrangement.spacedBy(23.dp)
     ) {
-        // Header
+        // Brand and greeting
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "POWERWATCH",
-                    color = PWGreen,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 2.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Bolt,
+                        contentDescription = null,
+                        tint = Green,
+                        modifier = Modifier.size(19.dp)
+                    )
+                    Spacer(Modifier.width(5.dp))
+                    Text(
+                        "POWERWATCH / CAMPUS",
+                        color = Green,
+                        fontSize = 10.sp,
+                        letterSpacing = 1.6.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
 
-                Spacer(Modifier.height(5.dp))
+                Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = "Hey, energy saver!",
-                    color = PWText,
-                    fontSize = 25.sp,
+                    "Good to see you.",
+                    color = Ink,
+                    fontSize = 27.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
-
                 Text(
-                    text = "Let's make your campus greener.",
-                    color = PWMuted,
+                    "Every small action counts.",
+                    color = Muted,
                     fontSize = 13.sp
                 )
             }
 
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(46.dp)
                     .clip(CircleShape)
-                    .background(PWLightGreen),
+                    .background(Color(0xFFE1F4E8)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.Eco,
-                    contentDescription = "PowerWatch",
-                    tint = PWGreen,
-                    modifier = Modifier.size(27.dp)
+                    Icons.Default.Eco,
+                    contentDescription = "Campus sustainability",
+                    tint = Green,
+                    modifier = Modifier.size(26.dp)
                 )
             }
         }
 
-        // Animated impact card
+        // Hero enters smoothly
         AnimatedVisibility(
-            visible = hasEntered,
+            visible = entered,
             enter = fadeIn(tween(500)) +
                     slideInVertically(
-                        animationSpec = tween(500),
-                        initialOffsetY = { it / 5 }
+                        initialOffsetY = { it / 5 },
+                        animationSpec = tween(500)
                     )
         ) {
-            EnergyImpactCard()
+            EnergyCommandCard()
         }
 
-        // Report action
-        Card(
+        // Reporting action
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onReportWaste() },
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = PWGreen
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                .clip(RoundedCornerShape(23.dp))
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF087F5B), Color(0xFF0A674B))
+                    )
+                )
+                .clickable { onReport() }
+                .padding(19.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(15.dp))
-                        .background(Color.White.copy(alpha = 0.16f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ReportProblem,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(27.dp)
-                    )
-                }
-
-                Spacer(Modifier.width(14.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Spot energy waste?",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp
-                    )
-
-                    Spacer(Modifier.height(4.dp))
-
-                    Text(
-                        text = "Report it. Make a difference.",
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 12.sp
-                    )
-                }
-
                 Icon(
-                    imageVector = Icons.Default.ArrowForward,
-                    contentDescription = "Open report form",
-                    tint = Color.White
+                    Icons.Default.ReportProblem,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(25.dp)
                 )
             }
+
+            Spacer(Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Found energy waste?",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Help your campus do better",
+                    color = Color.White.copy(alpha = 0.78f),
+                    fontSize = 12.sp
+                )
+            }
+
+            Icon(
+                Icons.Default.ArrowForward,
+                contentDescription = "Open reporting",
+                tint = Mint
+            )
         }
 
-        // Summary statistics
+        // Stats
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SectionHeading(
-                title = "Your impact",
-                subtitle = "A little action goes a long way"
+            SectionTitle(
+                "Your contribution",
+                "Your demo activity at a glance"
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatCard(
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                MetricTile(
+                    modifier = Modifier.weight(1f),
                     title = "Reports made",
                     value = 8,
-                    icon = Icons.Default.ReportProblem,
-                    modifier = Modifier.weight(1f)
+                    icon = Icons.Default.ReportProblem
                 )
-
-                StatCard(
+                MetricTile(
+                    modifier = Modifier.weight(1f),
                     title = "Resolved",
                     value = 5,
-                    icon = Icons.Default.CheckCircle,
-                    modifier = Modifier.weight(1f)
+                    icon = Icons.Default.CheckCircle
                 )
             }
         }
 
+        // Weekly chart
+        WeeklyActivityCard()
+
         // Recent reports
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(13.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent reports",
-                    color = PWText,
+                    "Recent activity",
+                    color = Ink,
                     fontSize = 19.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier.weight(1f)
                 )
-
                 Text(
-                    text = "View all",
-                    color = PWGreen,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
+                    "VIEW ALL  →",
+                    color = Green,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.6.sp,
                     modifier = Modifier.clickable { onViewReports() }
                 )
             }
 
-            ReportItem(
+            ActivityRow(
                 title = "Lights left on",
                 location = "Hostel Block A · Floor 2",
                 status = "Resolved",
                 resolved = true
             )
-
-            ReportItem(
+            ActivityRow(
                 title = "Fan running in empty room",
                 location = "Academic Block · Room 104",
                 status = "Pending",
@@ -352,299 +324,466 @@ private fun HomeDashboardContent(
         }
 
         Text(
-            text = "DEMO DATA · Actual savings will be calculated later",
-            color = PWMuted,
-            fontSize = 10.sp,
-            letterSpacing = 0.4.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 2.dp),
+            "DEMO DATA · NOT LIVE ENERGY MEASUREMENTS",
+            modifier = Modifier.fillMaxWidth(),
+            color = Muted,
+            fontSize = 9.sp,
+            letterSpacing = 0.6.sp
         )
     }
 }
 
 @Composable
-private fun EnergyImpactCard() {
-    val energySaved by animateIntAsState(
-        targetValue = 12,
-        animationSpec = tween(durationMillis = 1200),
-        label = "energySaved"
-    )
-
-    val progress by androidx.compose.animation.core.animateFloatAsState(
+private fun EnergyCommandCard() {
+    val progress by animateFloatAsState(
         targetValue = 0.72f,
-        animationSpec = tween(durationMillis = 1200),
-        label = "conservationProgress"
+        animationSpec = tween(1300),
+        label = "impactProgress"
     )
 
-    Card(
+    val resolved by animateIntAsState(
+        targetValue = 5,
+        animationSpec = tween(1000),
+        label = "resolvedCount"
+    )
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize(),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Bolt,
-                        contentDescription = null,
-                        tint = PWGreen,
-                        modifier = Modifier.size(20.dp)
+            .clip(RoundedCornerShape(29.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF063D30),
+                        Color(0xFF087F5B),
+                        Color(0xFF075541)
                     )
-
-                    Spacer(Modifier.width(6.dp))
-
-                    Text(
-                        text = "ENERGY IMPACT",
-                        color = PWMuted,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
-                }
-
-                Spacer(Modifier.height(12.dp))
-
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = "$energySaved",
-                        color = PWDeepGreen,
-                        fontSize = 43.sp,
-                        lineHeight = 46.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-
-                    Spacer(Modifier.width(6.dp))
-
-                    Text(
-                        text = "reports",
-                        color = PWMuted,
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 7.dp)
-                    )
-                }
-
-                Text(
-                    text = "resolved in the demo",
-                    color = PWMuted,
-                    fontSize = 12.sp
                 )
+            )
+    ) {
+        // Decorative orbital lines
+        Canvas(
+            modifier = Modifier
+                .size(210.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            val center = Offset(size.width * 0.73f, size.height * 0.22f)
+            drawCircle(
+                color = Mint.copy(alpha = 0.07f),
+                radius = 105.dp.toPx(),
+                center = center
+            )
+            drawCircle(
+                color = Mint.copy(alpha = 0.10f),
+                radius = 78.dp.toPx(),
+                center = center,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = 1.dp.toPx()
+                )
+            )
+            drawCircle(
+                color = Mint.copy(alpha = 0.15f),
+                radius = 51.dp.toPx(),
+                center = center,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = 1.dp.toPx()
+                )
+            )
+        }
 
-                Spacer(Modifier.height(14.dp))
+        Column(
+            modifier = Modifier.padding(21.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(Mint)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "YOUR ENERGY IMPACT",
+                    color = Mint,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.5.sp
+                )
+            }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.TrendingUp,
-                        contentDescription = null,
-                        tint = PWGreen,
-                        modifier = Modifier.size(16.dp)
+            Spacer(Modifier.height(20.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Make every",
+                        color = Color.White.copy(alpha = 0.75f),
+                        fontSize = 13.sp
+                    )
+                    Text(
+                        "watt count.",
+                        color = Color.White,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        lineHeight = 33.sp
                     )
 
-                    Spacer(Modifier.width(5.dp))
+                    Spacer(Modifier.height(12.dp))
 
                     Text(
-                        text = "Keep the momentum going!",
-                        color = PWGreen,
-                        fontSize = 11.sp,
+                        "$resolved reports resolved",
+                        color = Color.White,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold
                     )
+                    Spacer(Modifier.height(5.dp))
+                    Text(
+                        "Keep building better habits.",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 11.sp
+                    )
+                }
+
+                Box(
+                    modifier = Modifier.size(104.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxSize(),
+                        color = Mint,
+                        trackColor = Color.White.copy(alpha = 0.16f),
+                        strokeWidth = 8.dp,
+                        strokeCap = StrokeCap.Round
+                    )
+
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.Bolt,
+                            contentDescription = null,
+                            tint = Mint,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Text(
+                            "${(progress * 100).toInt()}%",
+                            color = Color.White,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 19.sp
+                        )
+                    }
                 }
             }
 
-            Box(
-                modifier = Modifier.size(94.dp),
-                contentAlignment = Alignment.Center
+            Spacer(Modifier.height(22.dp))
+
+            HorizontalDivider(color = Color.White.copy(alpha = 0.18f))
+
+            Spacer(Modifier.height(15.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                CircularProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.fillMaxSize(),
-                    color = PWGreen,
-                    trackColor = PWLightGreen,
-                    strokeWidth = 9.dp
+                Text(
+                    "CONSERVATION CHALLENGE",
+                    color = Color.White.copy(alpha = 0.76f),
+                    fontSize = 9.sp,
+                    letterSpacing = 0.8.sp,
+                    fontWeight = FontWeight.Bold
                 )
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "${(progress * 100).toInt()}%",
-                        color = PWDeepGreen,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-
-                    Text(
-                        text = "demo goal",
-                        color = PWMuted,
-                        fontSize = 9.sp
-                    )
-                }
+                Text(
+                    "DEMO GOAL",
+                    color = Mint,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
             }
         }
     }
 }
 
 @Composable
-private fun SectionHeading(
+private fun SectionTitle(
     title: String,
     subtitle: String
 ) {
     Column {
         Text(
-            text = title,
-            color = PWText,
+            title,
+            color = Ink,
             fontSize = 19.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.ExtraBold
         )
-
-        Spacer(Modifier.height(3.dp))
-
+        Spacer(Modifier.height(4.dp))
         Text(
-            text = subtitle,
-            color = PWMuted,
+            subtitle,
+            color = Muted,
             fontSize = 12.sp
         )
     }
 }
 
 @Composable
-private fun StatCard(
+private fun MetricTile(
     title: String,
     value: Int,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier
 ) {
-    val animatedValue by animateIntAsState(
+    val count by animateIntAsState(
         targetValue = value,
-        animationSpec = tween(900),
+        animationSpec = tween(850),
         label = title
     )
 
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(22.dp))
+            .background(Color.White)
+            .padding(16.dp)
     ) {
-        Column(
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                title.uppercase(),
+                color = Muted,
+                fontSize = 9.sp,
+                letterSpacing = 0.6.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = Green,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        Text(
+            "$count",
+            color = Ink,
+            fontSize = 34.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .height(4.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFE6EEE8))
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = PWGreen,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                text = "$animatedValue",
-                color = PWText,
-                fontSize = 29.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-
-            Spacer(Modifier.height(3.dp))
-
-            Text(
-                text = title,
-                color = PWMuted,
-                fontSize = 12.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(if (value == 0) 0f else value / 10f)
+                    .height(4.dp)
+                    .clip(CircleShape)
+                    .background(Green)
             )
         }
     }
 }
 
 @Composable
-private fun ReportItem(
+private fun WeeklyActivityCard() {
+    val values = listOf(0.35f, 0.60f, 0.42f, 0.83f, 0.55f, 0.95f, 0.48f)
+    val days = listOf("M", "T", "W", "T", "F", "S", "S")
+    var animateBars by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        animateBars = true
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(25.dp))
+            .background(Color.White)
+            .padding(19.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Weekly activity",
+                    color = Ink,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Illustrative report activity",
+                    color = Muted,
+                    fontSize = 11.sp
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFE5F5EB))
+                    .padding(horizontal = 10.dp, vertical = 7.dp)
+            ) {
+                Text(
+                    "7 DAYS",
+                    color = Green,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.7.sp
+                )
+            }
+        }
+
+        Spacer(Modifier.height(23.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(105.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            values.forEachIndexed { index, value ->
+                val animatedHeight by animateFloatAsState(
+                    targetValue = if (animateBars) value else 0.05f,
+                    animationSpec = tween(
+                        durationMillis = 650,
+                        delayMillis = index * 75
+                    ),
+                    label = "bar$index"
+                )
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(82.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(0.68f)
+                                .fillMaxHeight(animatedHeight)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (index == 5) Green
+                                    else Color(0xFFB8E7CB)
+                                )
+                        )
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Text(
+                        days[index],
+                        color = if (index == 5) Green else Muted,
+                        fontSize = 10.sp,
+                        fontWeight = if (index == 5) {
+                            FontWeight.ExtraBold
+                        } else {
+                            FontWeight.Normal
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ActivityRow(
     title: String,
     location: String,
     status: String,
     resolved: Boolean
 ) {
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .animateContentSize(),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+            .clip(RoundedCornerShape(19.dp))
+            .background(Color.White)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(15.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(
+                    if (resolved) Color(0xFFE1F4E8)
+                    else Color(0xFFFFF0DD)
+                ),
+            contentAlignment = Alignment.Center
         ) {
+            Icon(
+                if (resolved) Icons.Default.CheckCircle
+                else Icons.Default.AccessTime,
+                contentDescription = null,
+                tint = if (resolved) Green else Orange
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                title,
+                color = Ink,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                location,
+                color = Muted,
+                fontSize = 10.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        Spacer(Modifier.width(6.dp))
+
+        Column(horizontalAlignment = Alignment.End) {
             Box(
                 modifier = Modifier
-                    .size(43.dp)
-                    .clip(RoundedCornerShape(13.dp))
-                    .background(if (resolved) PWLightGreen else Color(0xFFFFF1DF)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (resolved) {
-                        Icons.Default.CheckCircle
-                    } else {
-                        Icons.Default.AccessTime
-                    },
-                    contentDescription = null,
-                    tint = if (resolved) PWGreen else PWOrange
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    color = PWText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                Text(
-                    text = location,
-                    color = PWMuted,
-                    fontSize = 11.sp
-                )
-            }
-
-            Spacer(Modifier.width(5.dp))
-
-            Surface(
-                shape = RoundedCornerShape(50),
-                color = if (resolved) PWLightGreen else Color(0xFFFFF1DF)
-            ) {
-                Text(
-                    text = status,
-                    color = if (resolved) PWGreen else PWOrange,
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(
-                        horizontal = 9.dp,
-                        vertical = 6.dp
-                    )
-                )
-            }
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(if (resolved) Green else Orange)
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                status,
+                color = if (resolved) Green else Orange,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
 
 @Composable
-private fun ReportsPlaceholderScreen(
+private fun ReportsContent(
     modifier: Modifier = Modifier,
-    onReportWaste: () -> Unit
+    onReport: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -654,38 +793,38 @@ private fun ReportsPlaceholderScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "My Reports",
-            color = PWText,
-            fontSize = 27.sp,
+            "My reports",
+            color = Ink,
+            fontSize = 28.sp,
             fontWeight = FontWeight.ExtraBold
         )
-
         Text(
-            text = "Your sample report history appears here. We'll add real filtering and report details later.",
-            color = PWMuted,
-            fontSize = 14.sp
+            "Your sample report history.",
+            color = Muted,
+            fontSize = 13.sp
         )
 
-        ReportItem(
-            title = "Lights left on",
-            location = "Hostel Block A · Floor 2",
-            status = "Resolved",
-            resolved = true
+        ActivityRow(
+            "Lights left on",
+            "Hostel Block A · Floor 2",
+            "Resolved",
+            true
         )
-
-        ReportItem(
-            title = "Fan running in empty room",
-            location = "Academic Block · Room 104",
-            status = "Pending",
-            resolved = false
+        ActivityRow(
+            "Fan running in empty room",
+            "Academic Block · Room 104",
+            "Pending",
+            false
         )
 
         Button(
-            onClick = onReportWaste,
+            onClick = onReport,
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = PWGreen)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Green
+            )
         ) {
-            Icon(Icons.Default.Add, contentDescription = null)
+            Icon(Icons.Default.ReportProblem, contentDescription = null)
             Spacer(Modifier.width(8.dp))
             Text("Report energy waste")
         }
@@ -693,52 +832,50 @@ private fun ReportsPlaceholderScreen(
 }
 
 @Composable
-private fun ProfilePlaceholderScreen(
+private fun ProfileContent(
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
-                .size(84.dp)
+                .size(86.dp)
                 .clip(CircleShape)
-                .background(PWLightGreen),
+                .background(Color(0xFFE1F4E8)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Person,
+                Icons.Default.Person,
                 contentDescription = null,
-                tint = PWGreen,
+                tint = Green,
                 modifier = Modifier.size(42.dp)
             )
         }
 
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(20.dp))
 
         Text(
-            text = "Your PowerWatch profile",
-            color = PWText,
+            "Your PowerWatch profile",
+            color = Ink,
             fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.ExtraBold
         )
-
         Spacer(Modifier.height(8.dp))
-
         Text(
-            text = "Student accounts and profile settings will be added with Firebase.",
-            color = PWMuted,
+            "Student accounts and settings will be added later.",
+            color = Muted,
             fontSize = 14.sp
         )
     }
 }
 
 @Composable
-private fun ReportPlaceholderScreen(
+private fun ReportFormPlaceholder(
     modifier: Modifier = Modifier,
     onBack: () -> Unit
 ) {
@@ -756,48 +893,45 @@ private fun ReportPlaceholderScreen(
         }
 
         Icon(
-            imageVector = Icons.Default.ReportProblem,
+            Icons.Default.ReportProblem,
             contentDescription = null,
-            tint = PWGreen,
+            tint = Green,
             modifier = Modifier.size(48.dp)
         )
 
         Text(
-            text = "Report energy waste",
-            color = PWText,
+            "Report energy waste",
+            color = Ink,
             fontSize = 28.sp,
             fontWeight = FontWeight.ExtraBold
         )
 
         Text(
-            text = "The full reporting form is coming in Phase 3. For now, this screen confirms that dashboard navigation works.",
-            color = PWMuted,
+            "The full reporting form comes in Phase 3. Next, we'll add building, room, equipment type, description, and photo options.",
+            color = Muted,
             fontSize = 15.sp,
             lineHeight = 23.sp
         )
 
-        Card(
-            colors = CardDefaults.cardColors(containerColor = PWLightGreen),
-            shape = RoundedCornerShape(18.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color(0xFFE1F4E8))
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Bolt,
-                    contentDescription = null,
-                    tint = PWGreen
-                )
-
-                Spacer(Modifier.width(12.dp))
-
-                Text(
-                    text = "Next: select a building, location, and equipment type.",
-                    color = PWDeepGreen,
-                    fontSize = 14.sp
-                )
-            }
+            Icon(
+                Icons.Default.Bolt,
+                contentDescription = null,
+                tint = Green
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                "Report waste. Protect energy.",
+                color = DeepGreen,
+                fontWeight = FontWeight.SemiBold
+            )
         }
     }
 }

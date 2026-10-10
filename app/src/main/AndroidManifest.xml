@@ -28,6 +28,12 @@
             android:label="@string/title_activity_dashboard_screen"
             android:theme="@style/Theme.PowerWatch"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".screens.ReportFormScreen"
+            android:exported="false"
+            android:label="@string/title_activity_report_form_screen"
+            android:theme="@style/Theme.PowerWatch"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
