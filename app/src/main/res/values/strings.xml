@@ -3,4 +3,5 @@
     <string name="title_activity_welcome_screen">WelcomeScreen</string>
     <string name="title_activity_dashboard_screen">DashboardScreen</string>
     <string name="title_activity_report_form_screen">ReportFormScreen</string>
+    <string name="title_activity_report_entity">ReportEntity</string>
 </resources>

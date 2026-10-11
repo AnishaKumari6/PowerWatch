@@ -34,6 +34,18 @@
             android:label="@string/title_activity_report_form_screen"
             android:theme="@style/Theme.PowerWatch"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".data.local.local.ReportEntity"
+            android:exported="false"
+            android:label="@string/title_activity_report_entity"
+            android:theme="@style/Theme.PowerWatch"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".data.local.ReportEntity"
+            android:exported="false"
+            android:label="@string/title_activity_report_entity"
+            android:theme="@style/Theme.PowerWatch"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
