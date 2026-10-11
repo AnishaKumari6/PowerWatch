@@ -46,6 +46,36 @@
             android:label="@string/title_activity_report_entity"
             android:theme="@style/Theme.PowerWatch"
             android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".data.local.ReportDao"
+            android:exported="false"
+            android:label="@string/title_activity_report_dao"
+            android:theme="@style/Theme.PowerWatch"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".data.local.PowerWatchDatabase"
+            android:exported="false"
+            android:label="@string/title_activity_power_watch_database"
+            android:theme="@style/Theme.PowerWatch"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".data.repository.ReportRepository"
+            android:exported="false"
+            android:label="@string/title_activity_report_repository"
+            android:theme="@style/Theme.PowerWatch"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".viewmodel.ReportViewModel"
+            android:exported="false"
+            android:label="@string/title_activity_report_view_model"
+            android:theme="@style/Theme.PowerWatch"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".viewmodel.ReportViewModelFactory"
+            android:exported="false"
+            android:label="@string/title_activity_report_view_model_factory"
+            android:theme="@style/Theme.PowerWatch"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

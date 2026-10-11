@@ -43,7 +43,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.UUID
-
+import com.example.powerwatch.data.local.ReportEntity
+import com.example.powerwatch.viewmodel.ReportViewModel
 private val ReportGreen = Color(0xFF087F5B)
 private val ReportDeepGreen = Color(0xFF064B39)
 private val ReportMint = Color(0xFFE3F5E9)
@@ -61,7 +62,8 @@ private data class EquipmentOption(
 fun ReportFormScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
-    onSubmitted: () -> Unit
+    onSubmitted: () -> Unit,
+    reportViewModel: ReportViewModel
 ) {
     val equipmentOptions = listOf(
         EquipmentOption("Lights", Icons.Default.Lightbulb),
@@ -78,7 +80,8 @@ fun ReportFormScreen(
         "Library",
         "Other"
     )
-
+    var isSaving by remember { mutableStateOf(false) }
+    var saveError by remember { mutableStateOf<String?>(null) }
     var selectedBuilding by remember { mutableStateOf("") }
     var buildingMenuExpanded by remember { mutableStateOf(false) }
     var room by remember { mutableStateOf("") }
@@ -476,15 +479,42 @@ fun ReportFormScreen(
         }
 
         // Submit
+
+        // Submit
         Button(
             onClick = {
                 attemptedSubmit = true
 
-                if (formValid) {
-                    reportId = "PW-${UUID.randomUUID().toString().take(8).uppercase()}"
-                    submitted = true
+                if (formValid && !isSaving) {
+                    isSaving = true
+                    saveError = null
+
+                    val report = ReportEntity(
+                        id = UUID.randomUUID().toString(),
+                        building = selectedBuilding,
+                        room = room.trim(),
+                        equipment = selectedEquipment,
+                        description = description.trim(),
+                        photoUri = photoUri?.toString(),
+                        createdAt = System.currentTimeMillis(),
+                        status = "Pending"
+                    )
+
+                    reportViewModel.addReport(report) { success, error ->
+                        isSaving = false
+
+                        if (success) {
+                            reportId =
+                                "PW-${report.id.take(8).uppercase()}"
+                            submitted = true
+                        } else {
+                            saveError =
+                                error ?: "Could not save your report."
+                        }
+                    }
                 }
             },
+            enabled = !isSaving,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(57.dp),
@@ -493,17 +523,48 @@ fun ReportFormScreen(
                 containerColor = ReportGreen
             )
         ) {
-            Icon(
-                Icons.Default.Send,
-                contentDescription = null
-            )
+            if (isSaving) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    Icons.Default.Send,
+                    contentDescription = null
+                )
+            }
+
             Spacer(Modifier.width(10.dp))
+
             Text(
-                "Submit report",
+                text = if (isSaving) {
+                    "Saving report..."
+                } else {
+                    "Submit report"
+                },
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
         }
+
+        // Display save errors outside the button
+        saveError?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 12.sp
+            )
+        }
+
+        Text(
+            text = "SAVED LOCALLY ON THIS DEVICE",
+            color = ReportMuted,
+            fontSize = 9.sp,
+            letterSpacing = 0.4.sp
+        )
+
 
         Text(
             "DEMO MODE · REPORTS ARE NOT YET SAVED TO A DATABASE",
@@ -512,6 +573,7 @@ fun ReportFormScreen(
             letterSpacing = 0.4.sp
         )
     }
+
 }
 
 @Composable
@@ -612,7 +674,7 @@ private fun SubmissionSuccessScreen(
         Spacer(Modifier.height(10.dp))
 
         Text(
-            "Your demo report has passed validation. Database storage and sharing will be added in a later phase.",
+            "Your report has been saved on this device.",
             color = ReportMuted,
             fontSize = 14.sp,
             lineHeight = 22.sp
@@ -628,7 +690,7 @@ private fun SubmissionSuccessScreen(
                 .padding(18.dp)
         ) {
             Text(
-                "DEMO REPORT REFERENCE",
+                "REPORT REFERENCE",
                 color = ReportMuted,
                 fontSize = 10.sp,
                 letterSpacing = 1.sp,
@@ -647,7 +709,7 @@ private fun SubmissionSuccessScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                "This reference is generated locally and is not yet registered on a server.",
+                "This report is stored on your device and has not been synced to a server.",
                 color = ReportMuted,
                 fontSize = 11.sp,
                 lineHeight = 17.sp

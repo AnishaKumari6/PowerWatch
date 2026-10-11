@@ -40,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.example.powerwatch.viewmodel.ReportViewModel
 private val Green = Color(0xFF087F5B)
 private val DeepGreen = Color(0xFF064B39)
 private val Mint = Color(0xFF78F0B3)
@@ -50,7 +50,8 @@ private val Muted = Color(0xFF75837B)
 private val Orange = Color(0xFFB96B20)
 
 @Composable
-fun DashboardScreen(modifier: Modifier = Modifier) {
+fun DashboardScreen(modifier: Modifier = Modifier,
+                    reportViewModel: ReportViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var showReportForm by remember { mutableStateOf(false) }
 
@@ -100,7 +101,8 @@ fun DashboardScreen(modifier: Modifier = Modifier) {
                 onSubmitted = {
                     showReportForm = false
                     selectedTab = 1
-                }
+                },
+                        reportViewModel = reportViewModel
             )
 
             selectedTab == 0 -> HomeContent(

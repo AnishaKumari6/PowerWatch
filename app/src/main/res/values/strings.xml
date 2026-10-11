@@ -4,4 +4,9 @@
     <string name="title_activity_dashboard_screen">DashboardScreen</string>
     <string name="title_activity_report_form_screen">ReportFormScreen</string>
     <string name="title_activity_report_entity">ReportEntity</string>
+    <string name="title_activity_report_dao">ReportDao</string>
+    <string name="title_activity_power_watch_database">PowerWatchDatabase</string>
+    <string name="title_activity_report_repository">ReportRepository</string>
+    <string name="title_activity_report_view_model">ReportViewModel</string>
+    <string name="title_activity_report_view_model_factory">ReportViewModelFactory</string>
 </resources>
