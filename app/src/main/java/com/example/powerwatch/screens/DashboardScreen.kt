@@ -113,7 +113,8 @@ fun DashboardScreen(modifier: Modifier = Modifier,
 
             selectedTab == 1 -> ReportsContent(
                 modifier = Modifier.padding(padding),
-                onReport = { showReportForm = true }
+                onReport = { showReportForm = true },
+                reportViewModel = reportViewModel
             )
 
             else -> ProfileContent(
@@ -782,11 +783,15 @@ private fun ActivityRow(
     }
 }
 
+
 @Composable
 private fun ReportsContent(
     modifier: Modifier = Modifier,
-    onReport: () -> Unit
+    onReport: () -> Unit,
+    reportViewModel: ReportViewModel
 ) {
+    val uiState by reportViewModel.uiState.collectAsState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -795,43 +800,176 @@ private fun ReportsContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            "My reports",
+            text = "My reports",
             color = Ink,
             fontSize = 28.sp,
             fontWeight = FontWeight.ExtraBold
         )
+
         Text(
-            "Your sample report history.",
+            text = "Your saved campus energy reports.",
             color = Muted,
             fontSize = 13.sp
         )
 
-        ActivityRow(
-            "Lights left on",
-            "Hostel Block A · Floor 2",
-            "Resolved",
-            true
-        )
-        ActivityRow(
-            "Fan running in empty room",
-            "Academic Block · Room 104",
-            "Pending",
-            false
-        )
+        // Loading state
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Green)
+            }
+        }
+
+        // Error state
+        else if (uiState.errorMessage != null &&
+            uiState.reports.isEmpty()
+        ) {
+            Text(
+                text = uiState.errorMessage ?: "Unable to load reports.",
+                color = MaterialTheme.colorScheme.error,
+                fontSize = 13.sp
+            )
+        }
+
+        // Empty state
+        else if (uiState.reports.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.White)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ListAlt,
+                    contentDescription = null,
+                    tint = Green,
+                    modifier = Modifier.size(42.dp)
+                )
+
+                Text(
+                    text = "No reports yet",
+                    color = Ink,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "Your submitted reports will appear here.",
+                    color = Muted,
+                    fontSize = 13.sp
+                )
+            }
+        }
+
+        // Actual reports from Room
+        else {
+            Text(
+                text = "${uiState.reports.size} report(s) submitted",
+                color = Green,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            uiState.reports.forEach { report ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(19.dp))
+                        .background(Color.White)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ReportProblem,
+                            contentDescription = null,
+                            tint = Green,
+                            modifier = Modifier.size(22.dp)
+                        )
+
+                        Spacer(Modifier.width(10.dp))
+
+                        Text(
+                            text = report.equipment,
+                            color = Ink,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Text(
+                            text = report.status,
+                            color = if (
+                                report.status.equals("Resolved", ignoreCase = true)
+                            ) Green else Orange,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Text(
+                        text = "${report.building} · Room ${report.room}",
+                        color = Muted,
+                        fontSize = 12.sp
+                    )
+
+                    Text(
+                        text = report.description,
+                        color = Ink,
+                        fontSize = 13.sp
+                    )
+
+                    Text(
+                        text = "Submitted: ${
+                            java.text.SimpleDateFormat(
+                                "dd MMM yyyy, hh:mm a",
+                                java.util.Locale.getDefault()
+                            ).format(java.util.Date(report.createdAt))
+                        }",
+                        color = Muted,
+                        fontSize = 10.sp
+                    )
+                }
+            }
+        }
 
         Button(
             onClick = onReport,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Green
-            )
+            ),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Icon(Icons.Default.ReportProblem, contentDescription = null)
+            Icon(
+                Icons.Default.ReportProblem,
+                contentDescription = null
+            )
             Spacer(Modifier.width(8.dp))
             Text("Report energy waste")
         }
+
+        Text(
+            text = "REPORTS ARE STORED LOCALLY ON THIS DEVICE",
+            color = Muted,
+            fontSize = 9.sp,
+            letterSpacing = 0.5.sp
+        )
     }
 }
+
 
 @Composable
 private fun ProfileContent(
